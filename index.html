@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XVM-86 技術仕様書 — Rev. 1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --ink-light: #2e2e4a;
+    --accent: #c8102e;
+    --accent-dim: #8b0a1f;
+    --gold: #b8860b;
+    --rule: #c5c5d8;
+    --bg: #f7f6f1;
+    --bg-alt: #eeecе4;
+    --mono: 'IBM Plex Mono', monospace;
+    --serif: 'Noto Serif JP', serif;
+    --sans: 'Noto Sans JP', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--sans);
+    background: #e8e6de;
+    color: var(--ink);
+    line-height: 1.7;
+  }
+
+  .page {
+    max-width: 900px;
+    margin: 40px auto;
+    background: var(--bg);
+    box-shadow: 0 4px 40px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.1);
+  }
+
+  /* Cover */
+  .cover {
+    background: var(--ink);
+    color: #f0ede4;
+    padding: 60px 70px 50px;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 260px; height: 100%;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent, transparent 18px,
+      rgba(255,255,255,0.03) 18px, rgba(255,255,255,0.03) 19px
+    );
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: var(--accent);
+  }
+  .cover-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .cover-badge::before {
+    content: '';
+    display: inline-block;
+    width: 28px; height: 2px;
+    background: var(--accent);
+  }
+  .cover h1 {
+    font-family: var(--mono);
+    font-size: 56px;
+    font-weight: 600;
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .cover h1 span {
+    color: var(--accent);
+  }
+  .cover-subtitle {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 400;
+    color: rgba(240,237,228,0.7);
+    margin-bottom: 48px;
+    letter-spacing: 1px;
+  }
+  .cover-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    padding-top: 32px;
+    border-top: 1px solid rgba(255,255,255,0.12);
+  }
+  .cover-meta-item label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(240,237,228,0.45);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .cover-meta-item span {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: rgba(240,237,228,0.85);
+  }
+
+  /* Body layout */
+  .doc-body {
+    padding: 0 70px 60px;
+  }
+
+  /* Section */
+  .section {
+    padding: 42px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .section:last-child { border-bottom: none; }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .section-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    min-width: 32px;
+  }
+  .section-title {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 0.5px;
+    position: relative;
+  }
+  .section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0;
+    width: 100%; height: 1px;
+    background: linear-gradient(90deg, var(--ink) 60%, transparent);
+    opacity: 0.15;
+  }
+
+  /* Spec table */
+  .spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin-top: 8px;
+  }
+  .spec-table thead tr {
+    background: var(--ink);
+    color: #f0ede4;
+  }
+  .spec-table thead th {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    text-align: left;
+    font-weight: 500;
+  }
+  .spec-table tbody tr {
+    border-bottom: 1px solid var(--rule);
+    transition: background 0.15s;
+  }
+  .spec-table tbody tr:hover { background: rgba(200,16,46,0.03); }
+  .spec-table td {
+    padding: 11px 16px;
+    vertical-align: top;
+  }
+  .spec-table td:first-child {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-light);
+    white-space: nowrap;
+    width: 240px;
+  }
+  .spec-table td:last-child {
+    font-size: 13px;
+    color: #333;
+  }
+
+  /* Sub-section */
+  .sub-section {
+    margin-bottom: 32px;
+  }
+  .sub-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed rgba(200,16,46,0.25);
+  }
+
+  /* Register table */
+  .reg-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .reg-card {
+    background: var(--ink);
+    color: #f0ede4;
+    padding: 10px 12px;
+    border-left: 3px solid var(--accent);
+  }
+  .reg-card .reg-name {
+    font-family: var(--mono);
+    font-size: 16px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+  }
+  .reg-card .reg-desc {
+    font-size: 10px;
+    color: rgba(240,237,228,0.55);
+    font-family: var(--sans);
+    line-height: 1.3;
+  }
+
+  /* Memory map */
+  .memmap {
+    font-family: var(--mono);
+    font-size: 12px;
+    border: 1px solid var(--rule);
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .memmap-row {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid var(--rule);
+  }
+  .memmap-row:last-child { border-bottom: none; }
+  .memmap-row:hover { background: rgba(200,16,46,0.03); }
+  .memmap-addr {
+    width: 130px;
+    min-width: 130px;
+    padding: 9px 14px;
+    color: var(--accent);
+    font-size: 11px;
+    border-right: 1px solid var(--rule);
+    background: rgba(26,26,46,0.03);
+  }
+  .memmap-size {
+    width: 80px;
+    min-width: 80px;
+    padding: 9px 10px;
+    color: var(--gold);
+    font-size: 11px;
+    border-right: 1px solid var(--rule);
+    text-align: right;
+  }
+  .memmap-label {
+    padding: 9px 14px;
+    flex: 1;
+    font-family: var(--sans);
+    font-size: 12.5px;
+    color: var(--ink);
+  }
+  .memmap-badge {
+    padding: 9px 14px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 9.5px;
+    font-family: var(--mono);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .badge-ro { background: rgba(200,16,46,0.12); color: var(--accent); }
+  .badge-rw { background: rgba(26,26,46,0.08); color: var(--ink-light); }
+  .badge-mirror { background: rgba(184,134,11,0.12); color: var(--gold); }
+
+  /* Info blocks */
+  .info-box {
+    background: rgba(26,26,46,0.04);
+    border-left: 3px solid var(--ink);
+    padding: 14px 18px;
+    margin: 12px 0;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  .info-box.accent {
+    border-left-color: var(--accent);
+    background: rgba(200,16,46,0.04);
+  }
+  .info-box.gold {
+    border-left-color: var(--gold);
+    background: rgba(184,134,11,0.04);
+  }
+
+  /* Two column */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+  /* Palette display */
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(16, 1fr);
+    gap: 3px;
+    margin-top: 10px;
+  }
+  .palette-swatch {
+    aspect-ratio: 1;
+    border: 1px solid rgba(0,0,0,0.1);
+    cursor: default;
+    position: relative;
+  }
+
+  /* Timeline / compat */
+  .compat-list { list-style: none; margin-top: 10px; }
+  .compat-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 13px;
+  }
+  .compat-list li:last-child { border-bottom: none; }
+  .compat-icon {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #fff;
+    background: var(--ink);
+    padding: 2px 6px;
+    margin-top: 2px;
+    min-width: 48px;
+    text-align: center;
+  }
+  .compat-icon.good { background: #1a7a3c; }
+  .compat-icon.mid { background: var(--gold); color: var(--ink); }
+  .compat-list li .compat-body strong { display: block; font-size: 13px; margin-bottom: 2px; }
+  .compat-list li .compat-body span { font-size: 12px; color: #666; }
+
+  /* Footer */
+  .doc-footer {
+    background: var(--ink);
+    color: rgba(240,237,228,0.45);
+    padding: 18px 70px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+  .doc-footer span { color: rgba(240,237,228,0.65); }
+
+  /* TOC */
+  .toc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 40px;
+    margin-top: 10px;
+  }
+  .toc-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px dotted rgba(0,0,0,0.12);
+    font-size: 13px;
+    gap: 8px;
+  }
+  .toc-item .toc-sec {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    min-width: 20px;
+  }
+  .toc-item .toc-name { flex: 1; }
+  .toc-item .toc-pg {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #999;
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: rgba(26,26,46,0.07);
+    padding: 1px 5px;
+    color: var(--accent-dim);
+  }
+
+  p { font-size: 13.5px; line-height: 1.9; margin-bottom: 10px; color: #2a2a3a; }
+
+  @media print {
+    body { background: white; }
+    .page { box-shadow: none; margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-badge">Technical Specification Document</div>
+    <h1><span>XVM</span>-86</h1>
+    <div class="cover-subtitle">16-Bit Entertainment System — Hardware Architecture Reference</div>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <label>Document Rev.</label>
+        <span>1.0.0</span>
+      </div>
+      <div class="cover-meta-item">
+        <label>Classification</label>
+        <span>Public</span>
+      </div>
+      <div class="cover-meta-item">
+        <label>Issued</label>
+        <span>2026-02-28</span>
+      </div>
+      <div class="cover-meta-item">
+        <label>CPU Architecture</label>
+        <span>XVM-86 Core / 16-bit</span>
+      </div>
+      <div class="cover-meta-item">
+        <label>Display</label>
+        <span>256 × 240 px</span>
+      </div>
+      <div class="cover-meta-item">
+        <label>Audio</label>
+        <span>FM Synthesis + PCM</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-body">
+
+    <!-- TOC -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">—</span>
+        <h2 class="section-title">目次</h2>
+      </div>
+      <div class="toc-grid">
+        <div class="toc-item"><span class="toc-sec">01</span><span class="toc-name">システム概要</span><span class="toc-pg">§1</span></div>
+        <div class="toc-item"><span class="toc-sec">06</span><span class="toc-name">メモリマップ</span><span class="toc-pg">§6</span></div>
+        <div class="toc-item"><span class="toc-sec">02</span><span class="toc-name">CPU アーキテクチャ</span><span class="toc-pg">§2</span></div>
+        <div class="toc-item"><span class="toc-sec">07</span><span class="toc-name">入力インターフェース</span><span class="toc-pg">§7</span></div>
+        <div class="toc-item"><span class="toc-sec">03</span><span class="toc-name">グラフィクス (VPU)</span><span class="toc-pg">§3</span></div>
+        <div class="toc-item"><span class="toc-sec">08</span><span class="toc-name">カートリッジ仕様</span><span class="toc-pg">§8</span></div>
+        <div class="toc-item"><span class="toc-sec">04</span><span class="toc-name">サウンド (FMU)</span><span class="toc-pg">§4</span></div>
+        <div class="toc-item"><span class="toc-sec">09</span><span class="toc-name">移植ガイドライン</span><span class="toc-pg">§9</span></div>
+        <div class="toc-item"><span class="toc-sec">05</span><span class="toc-name">タイミング / 割り込み</span><span class="toc-pg">§5</span></div>
+        <div class="toc-item"><span class="toc-sec">10</span><span class="toc-name">付録</span><span class="toc-pg">§10</span></div>
+      </div>
+    </div>
+
+    <!-- §1 システム概要 -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">§1</span>
+        <h2 class="section-title">システム概要</h2>
+      </div>
+      <p>
+        XVM-86 は 16 ビット CISC アーキテクチャを採用したコンシューマー向けゲーム機です。
+        256×240 ドットのタイルベース描画システムと 6 オペレータ FM 音源を統合し、
+        既存の 8/16 ビット世代タイトルの移植を最小限の工数で実現できる設計思想に基づいています。
+      </p>
+
+      <table class="spec-table">
+        <thead>
+          <tr>
+            <th>項目</th>
+            <th>仕様</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>CPU</td><td>XVM-86 Core（独自 16-bit CISC）、クロック 10.74 MHz</td></tr>
+          <tr><td>ワーク RAM</td><td>128 KB メインRAM（16-bit バス幅）</td></tr>
+          <tr><td>ビデオ RAM</td><td>64 KB VRAM（VPU 専用）</td></tr>
+          <tr><td>サウンド RAM</td><td>8 KB FM パラメーター RAM + 64 KB PCM バッファ</td></tr>
+          <tr><td>カートリッジ ROM</td><td>最大 8 MB（バンク切り替え対応）</td></tr>
+          <tr><td>映像出力</td><td>256 × 240 ドット、最大 512 色パレット（同時 64 色）</td></tr>
+          <tr><td>音声出力</td><td>FM 6ch + PCM 4ch + ノイズ 1ch、ステレオ</td></tr>
+          <tr><td>コントローラー</td><td>最大 2 ポート（デイジーチェーンで拡張可）</td></tr>
+          <tr><td>外部端子</td><td>RGB 出力、複合映像、ステレオ音声、拡張バス</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- §2 CPU -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">§2</span>
+        <h2 class="section-title">CPU アーキテクチャ</h2>
+      </div>
+
+      <div class="sub-section">
+        <div class="sub-title">2.1 汎用レジスタ</div>
+        <div class="reg-grid">
+          <div class="reg-card"><span class="reg-name">AX</span><span class="reg-desc">アキュムレータ<br>AH / AL に分割可</span></div>
+          <div class="reg-card"><span class="reg-name">BX</span><span class="reg-desc">ベース / インデックス<br>BH / BL に分割可</span></div>
+          <div class="reg-card"><span class="reg-name">CX</span><span class="reg-desc">カウンタ<br>ループ命令で使用</span></div>
+          <div class="reg-card"><span class="reg-name">DX</span><span class="reg-desc">データ / I/O<br>DH / DL に分割可</span></div>
+          <div class="reg-card"><span class="reg-name">SI</span><span class="reg-desc">ソースインデックス</span></div>
+          <div class="reg-card"><span class="reg-name">DI</span><span class="reg-desc">デスティネーション<br>インデックス</span></div>
+          <div class="reg-card"><span class="reg-name">SP</span><span class="reg-desc">スタックポインタ</span></div>
+          <div class="reg-card"><span class="reg-name">BP</span><span class="reg-desc">ベースポインタ<br>スタックフレーム</span></div>
+        </div>
+      </div>
+
+      <div class="sub-section">
+        <div class="sub-title">2.2 セグメントレジスタ</div>
+        <div class="reg-grid">
+          <div class="reg-card"><span class="reg-name">CS</span><span class="reg-desc">コードセグメント</span></div>
+          <div class="reg-card"><span class="reg-name">DS</span><span class="reg-desc">データセグメント</span></div>
+          <div class="reg-card"><span class="reg-name">SS</span><span class="reg-desc">スタックセグメント</span></div>
+          <div class="reg-card"><span class="reg-name">ES</span><span class="reg-desc">エクストラ<br>セグメント</span></div>
+        </div>
+      </div>
+
+      <div class="sub-section">
+        <div class="sub-title">2.3 命令セット概要</div>
+        <table class="spec-table">
+          <thead><tr><th>カテゴリ</th><th>主要命令</th></tr></thead>
+          <tbody>
+            <tr><td>データ転送</td><td>MOV, PUSH/POP, XCHG, LEA, LDS, LES</td></tr>
+            <tr><td>算術演算</td><td>ADD, SUB, MUL, DIV, INC, DEC, NEG, CMP</td></tr>
+            <tr><td>論理演算</td><td>AND, OR, XOR, NOT, TEST, SHL/SHR, ROL/ROR</td></tr>
+            <tr><td>制御転送</td><td>JMP, Jcc, CALL, RET, LOOP, INT, IRET</td></tr>
+            <tr><td>文字列処理</td><td>MOVSW, STOSW, LODSW, CMPSW, SCASW（REP プレフィックス対応）</td></tr>
+            <tr><td>XVM 拡張</td><td>VBLK（VPU DMA起動）、FMWR/FMRD（FMU 直接アクセス）、HWBLT（ハードウェアブリット）</td></tr>
+          </tbody>
+        </table>
+        <div class="info-box gold" style="margin-top:14px;">
+          <strong>互換性ノート:</strong> 命令セットは Intel 8086/80186 の基本命令と高い互換性を持ちます。既存の x86 向けアセンブラ（NASM / MASM 形式）でほぼそのまま使用可能です。拡張命令は <code>XVM::</code> プレフィックス記述で区別されます。
+        </div>
+      </div>
+
+      <div class="sub-section">
+        <div class="sub-title">2.4 アドレッシングモード</div>
+        <table class="spec-table">
+          <thead><tr><th>モード</th><th>記法例</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td>即値</td><td><code>MOV AX, 1234h</code></td><td>16-bit 即値</td></tr>
+            <tr><td>レジスタ直接</td><td><code>MOV AX, BX</code></td><td>レジスタ同士</td></tr>
+            <tr><td>メモリ直接</td><td><code>MOV AX, [2000h]</code></td><td>絶対アドレス</td></tr>
+            <tr><td>ベース相対</td><td><code>MOV AX, [BX+10h]</code></td><td>BX/BP + 変位</td></tr>
+            <tr><td>インデックス</td><td><code>MOV AX, [SI]</code></td><td>SI/DI</td></tr>
+            <tr><td>ベース＋インデックス</td><td><code>MOV AX, [BX+SI]</code></td><td>組み合わせ</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- §3 VPU -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">§3</span>
+        <h2 class="section-title">グラフィクス (VPU)</h2>
+      </div>
+      <p>VPU（Video Processing Unit）はタイル描画、スプライト処理、パレット管理を独立して処理します。CPU との非同期動作により、描画負荷が CPU パフォーマンスに直接影響しません。</p>
+
+      <div class="sub-section">
+        <div class="sub-title">3.1 画面仕様</div>
+        <table class="spec-table">
+          <thead><tr><th>項目</th><th>仕様</th></tr></thead>
+          <tbody>
+            <tr><td>解像度</td><td>256 × 240 ピクセル（表示領域 240 × 224 を推奨）</td></tr>
+            <tr><td>色数</td><td>512 色パレット（9-bit RGB 各3ビット）、同時表示 64 色</td></tr>
+            <tr><td>パレット構成</td><td>8 パレット × 各 8 色（背景用 4 + スプライト用 4）</td></tr>
+            <tr><td>フレームレート</td><td>60 fps（NTSC）/ 50 fps（PAL）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="sub-section">
+        <div class="sub-title">3.2 レイヤー構成</div>
+        <table class="spec-table">
+          <thead><tr><th>レイヤー</th><th>タイルサイズ</th><th>マップサイズ</th><th>スクロール</th></tr></thead>
+          <tbody>
+            <tr><td>BG Layer 0（最前面）</td><td>8×8 px</td><td>32×30 タイル（512×480 px）</td><td>H/V スクロール、ラインスクロール対応</td></tr>
+            <tr><td>BG Layer 1</td><td>8×8 px</td><td>64×60 タイル（1024×960 px）</td><td>独立 H/V スクロール</td></tr>
+            <tr><td>BG Layer 2（背景）</td><td>16×16 px</td><td>32×30 タイル</td><td>H スクロールのみ</td></tr>
+            <tr><td>スプライト</td><td>8×8 / 8×16 / 16×16 px</td><td>—</td><td>自由配置</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="sub-section">
+        <div class="sub-title">3.3 スプライト仕様</div>
+        <table class="spec-table">
+          <thead><tr><th>項目</th><th>仕様</th></tr></thead>
+          <tbody>
+            <tr><td>最大スプライト数</td><td>128 個（画面全体）</td></tr>
+            <tr><td>水平上限</td><td>1 ラインあたり 32 個</td></tr>
+            <tr><td>属性</td><td>X/Y 座標（符号付き）、タイル番号、パレット選択、H/V 反転、優先度、半透明フラグ</td></tr>
+            <tr><td>半透明合成</td><td>α 4-bit（16 段階）、加算合成モード対応</td></tr>
+            <tr><td>ハードウェアブリット</td><td>HWBLT 命令で VRAM → スプライトバッファ高速転送</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="sub-section">
+        <div class="sub-title">3.4 パレット（512 色中の代表色）</div>
+        <div class="palette-grid" id="paletteGrid"></div>
+      </div>
+    </div>
+
+    <!-- §4 FMU -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">§4</span>
+        <h2 class="section-title">サウンド (FMU)</h2>
+      </div>
+      <p>FMU（FM Unit）は YM2612 互換の 6 オペレータ FM 音源と、PCM ストリーム再生、ノイズジェネレーターを統合します。</p>
+
+      <div class="sub-section">
+        <div class="sub-title">4.1 FM チャンネル仕様</div>
+        <table class="spec-table">
+          <thead><tr><th>項目</th><th>仕様</th></tr></thead>
+          <tbody>
+            <tr><td>FM チャンネル数</td><td>6 ch（各チャンネル 4 オペレータ、最大 6 アルゴリズム）</td></tr>
+            <tr><td>アルゴリズム</td><td>8 種類（YM2612 互換）</td></tr>
+            <tr><td>オペレータパラメーター</td><td>AR, DR, SR, RR, SL, TL, KS, MUL, DT1, DT2, AM</td></tr>
+            <tr><td>LFO</td><td>1 系統（振幅変調 / 周波数変調、7 種速度）</td></tr>
+            <tr><td>DAC モード</td><td>CH6 を 8-bit PCM 直接出力に切り替え可能（YM2612 互換）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="sub-section">
+        <div class="sub-title">4.2 PCM / ノイズ</div>
+        <table class="spec-table">
+          <thead><tr><th>項目</th><th>仕様</th></tr></thead>
+          <tbody>
+            <tr><td>PCM チャンネル数</td><td>4 ch 独立再生（DMA 転送対応）</td></tr>
+            <tr><td>PCM フォーマット</td><td>8-bit 符号なし PCM、最大サンプリング 22.05 kHz</td></tr>
+            <tr><td>PCM バッファ</td><td>64 KB（ループ再生対応）</td></tr>
+            <tr><td>ノイズ</td><td>1 ch（周期 / ホワイトノイズ選択、16 段ピッチ）</td></tr>
+            <tr><td>ステレオパン</td><td>全チャンネル L/R 独立ボリューム（4-bit × 2）</td></tr>
+            <tr><td>出力サンプリング</td><td>最終ミックス 44.1 kHz / 16-bit ステレオ</td></tr>
+          </tbody>
+        </table>
+        <div class="info-box accent" style="margin-top:14px;">
+          <strong>移植ノート:</strong> YM2612（メガドライブ）の VGM / TFI パッチデータは変換ツールなしで直接使用できます。PSG（SN76489）互換の簡易チャンネルはノイズチャンネルと PCM 1ch をマッピングして対応可能です。
+        </div>
+      </div>
+    </div>
+
+    <!-- §5 タイミング -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">§5</span>
+        <h2 class="section-title">タイミング / 割り込み</h2>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="sub-title">5.1 フレームタイミング（NTSC）</div>
+          <table class="spec-table" style="margin-top:8px;">
+            <thead><tr><th>区間</th><th>ライン数</th></tr></thead>
+            <tbody>
+              <tr><td>アクティブ表示</td><td>0 – 239（240 本）</td></tr>
+              <tr><td>垂直ブランク (VBLANK)</td><td>240 – 261（22 本）</td></tr>
+              <tr><td>総ライン数</td><td>262 本 / frame</td></tr>
+              <tr><td>水平クロック</td><td>341 サイクル / line</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div class="sub-title">5.2 割り込みベクター</div>
+          <table class="spec-table" style="margin-top:8px;">
+            <thead><tr><th>ベクター</th><th>イベント</th></tr></thead>
+            <tbody>
+              <tr><td><code>INT 0</code></td><td>VBLANK（毎フレーム）</td></tr>
+              <tr><td><code>INT 1</code></td><td>Hライン割り込み（設定ライン）</td></tr>
+              <tr><td><code>INT 2</code></td><td>FM / PCM バッファ要求</td></tr>
+              <tr><td><code>INT 3</code></td><td>コントローラー入力変化</td></tr>
+              <tr><td><code>INT 4–7</code></td><td>カートリッジ拡張用</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- §6 メモリマップ -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">§6</span>
+        <h2 class="section-title">メモリマップ</h2>
+      </div>
+
+      <div class="memmap">
+        <div class="memmap-row" style="background:rgba(26,26,46,0.06);">
+          <div class="memmap-addr" style="font-size:9px;color:#999;padding-top:6px;">ADDRESS</div>
+          <div class="memmap-size" style="font-size:9px;color:#999;text-align:right;padding-top:6px;">SIZE</div>
+          <div class="memmap-label" style="font-size:9px;color:#999;padding-top:6px;">DESCRIPTION</div>
+          <div class="memmap-badge"></div>
+        </div>
+        <div class="memmap-row"><div class="memmap-addr">00000h–1FFFFh</div><div class="memmap-size">128 KB</div><div class="memmap-label">メイン RAM（ワーク・スタック）</div><div class="memmap-badge"><span class="badge badge-rw">R/W</span></div></div>
+        <div class="memmap-row"><div class="memmap-addr">20000h–3FFFFh</div><div class="memmap-size">128 KB</div><div class="memmap-label">拡張 RAM（カートリッジ増設時）</div><div class="memmap-badge"><span class="badge badge-rw">R/W</span></div></div>
+        <div class="memmap-row"><div class="memmap-addr">40000h–4FFFFh</div><div class="memmap-size">64 KB</div><div class="memmap-label">VRAM（タイル・マップ・スプライト属性）</div><div class="memmap-badge"><span class="badge badge-rw">R/W</span></div></div>
+        <div class="memmap-row"><div class="memmap-addr">50000h–50FFFh</div><div class="memmap-size">4 KB</div><div class="memmap-label">パレット RAM</div><div class="memmap-badge"><span class="badge badge-rw">R/W</span></div></div>
+        <div class="memmap-row"><div class="memmap-addr">51000h–51FFFh</div><div class="memmap-size">4 KB</div><div class="memmap-label">スプライト属性テーブル</div><div class="memmap-badge"><span class="badge badge-rw">R/W</span></div></div>
+        <div class="memmap-row"><div class="memmap-addr">52000h–52FFh</div><div class="memmap-size">256 B</div><div class="memmap-label">VPU レジスタ（I/O マップ）</div><div class="memmap-badge"><span class="badge badge-rw">R/W</span></div></div>
+        <div class="memmap-row"><div class="memmap-addr">53000h–53FFh</div><div class="memmap-size">256 B</div><div class="memmap-label">FMU レジスタ（I/O マップ）</div><div class="memmap-badge"><span class="badge badge-rw">R/W</span></div></div>
+        <div class="memmap-row"><div class="memmap-addr">54000h–63FFFFh</div><div class="memmap-size">64 KB</div><div class="memmap-label">PCM バッファ（DMA 転送対象）</div><div class="memmap-badge"><span class="badge badge-rw">R/W</span></div></div>
+        <div class="memmap-row"><div class="memmap-addr">60000h–6FFFFh</div><div class="memmap-size">64 KB</div><div class="memmap-label">システム ROM（BIOS / IPL）</div><div class="memmap-badge"><span class="badge badge-ro">ROM</span></div></div>
+        <div class="memmap-row"><div class="memmap-addr">80000h–FFFFFh</div><div class="memmap-size">~8 MB</div><div class="memmap-label">カートリッジ ROM バンク（バンク切り替え対応）</div><div class="memmap-badge"><span class="badge badge-ro">ROM</span></div></div>
+      </div>
+    </div>
+
+    <!-- §7 入力 -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">§7</span>
+        <h2 class="section-title">入力インターフェース</h2>
+      </div>
+      <table class="spec-table">
+        <thead><tr><th>項目</th><th>仕様</th></tr></thead>
+        <tbody>
+          <tr><td>コネクター</td><td>DE-9（D-sub 9ピン）× 2 ポート</td></tr>
+          <tr><td>プロトコル</td><td>シリアルシフトレジスタ（8 ビット / 16 ビット拡張）</td></tr>
+          <tr><td>標準ボタン</td><td>十字キー、A / B / C / X / Y / Z、START / SELECT（16 ビット幅）</td></tr>
+          <tr><td>ポーリング</td><td>VBLANK 割り込み内での読み出しを推奨（レジスタ: <code>53080h</code>）</td></tr>
+          <tr><td>拡張デバイス</td><td>アナログパッド（8 ビット軸 × 2）、マウス、ライトガン（走査線タイミング検出）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- §8 カートリッジ -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">§8</span>
+        <h2 class="section-title">カートリッジ仕様</h2>
+      </div>
+      <div class="two-col">
+        <table class="spec-table">
+          <thead><tr><th>項目</th><th>仕様</th></tr></thead>
+          <tbody>
+            <tr><td>コネクター</td><td>60 ピン エッジコネクター</td></tr>
+            <tr><td>ROM バス幅</td><td>16-bit</td></tr>
+            <tr><td>最大 ROM 容量</td><td>8 MB（バンクレジスタ経由）</td></tr>
+            <tr><td>セーブ RAM</td><td>最大 64 KB（バッテリーバックアップ）</td></tr>
+            <tr><td>拡張チップ</td><td>カートリッジ内 DSP スロット対応</td></tr>
+          </tbody>
+        </table>
+        <div>
+          <div class="sub-title">ヘッダー構造（オフセット 80000h–）</div>
+          <table class="spec-table" style="margin-top:8px;">
+            <thead><tr><th>オフセット</th><th>内容</th></tr></thead>
+            <tbody>
+              <tr><td><code>+000h</code></td><td>マジックナンバー "XVM86"（6B）</td></tr>
+              <tr><td><code>+006h</code></td><td>リージョンコード（1B）</td></tr>
+              <tr><td><code>+007h</code></td><td>ROM サイズコード（1B）</td></tr>
+              <tr><td><code>+008h</code></td><td>ゲームタイトル ASCII（32B）</td></tr>
+              <tr><td><code>+028h</code></td><td>エントリーポイントアドレス（4B）</td></tr>
+              <tr><td><code>+02Ch</code></td><td>チェックサム（2B）</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- §9 移植ガイドライン -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">§9</span>
+        <h2 class="section-title">移植ガイドライン</h2>
+      </div>
+      <p>XVM-86 は主要なレトロゲーム機からの移植を想定し、ハードウェアレベルの互換レイヤーを設計しています。以下に機種別の互換性概要を示します。</p>
+
+      <ul class="compat-list">
+        <li>
+          <span class="compat-icon good">◎ 優良</span>
+          <div class="compat-body">
+            <strong>SEGA Mega Drive / Genesis</strong>
+            <span>68000 → XVM-86 の命令対応表は 85% 以上。YM2612 パラメーターをそのまま FMU に転用可。VDP タイルフォーマット（4bpp プレーナー）は VRAM 配置変換のみで再利用可能。PSG の 3+1ch は FMU PCM ch1–3 + ノイズにマッピング。</span>
+          </div>
+        </li>
+        <li>
+          <span class="compat-icon good">◎ 優良</span>
+          <div class="compat-body">
+            <strong>SEGA Mark III / Master System</strong>
+            <span>Z80 → 8-bit サブセット命令は XVM-86 の 8-bit レジスタ（AH/AL 等）で完全対応。VDP モード 4 タイルデータは 4bpp ビットプレーン変換が必要（変換ツール提供）。FM 音源搭載版の YM2413 は FMU でアルゴリズム 0/1 にマップ可能。</span>
+          </div>
+        </li>
+        <li>
+          <span class="compat-icon good">◎ 優良</span>
+          <div class="compat-body">
+            <strong>PC Engine / TurboGrafx-16</strong>
+            <span>HuC6280（6502 拡張）命令の大半は直接変換ライブラリでサポート。256 × 240 解像度は XVM-86 の出力と完全一致。スプライト最大 64 個（HuC6270）は XVM-86 の 128 個に収まる。CD-ROM 音源は PCM バッファで代替可能。</span>
+          </div>
+        </li>
+        <li>
+          <span class="compat-icon good">◎ 優良</span>
+          <div class="compat-body">
+            <strong>Nintendo Famicom / NES</strong>
+            <span>2A03（6502）命令セットは変換ライブラリで対応。PPU のタイルサイズ（8×8、8×16）と NES パレット（54 色）は XVM-86 パレット内に収容可能。APU（矩形波 2ch + 三角波 + ノイズ + DPCM）は FMU アルゴリズム 6 + ノイズ + PCM ch で再現。</span>
+          </div>
+        </li>
+        <li>
+          <span class="compat-icon mid">△ 要調整</span>
+          <div class="compat-body">
+            <strong>Super Nintendo / Super Famicom</strong>
+            <span>65816 → XVM-86 の 24-bit アドレッシング差異に注意が必要。SNES PPU のモード 7（アフィン変換）は CPU ソフトウェアエミュレーションで部分対応。SPC700 音源の ADPCM サンプルは PCM バッファ変換で代替。グラフィクスの色数（32768 色）は 512 色パレットへの縮減が必要。</span>
+          </div>
+        </li>
+        <li>
+          <span class="compat-icon mid">△ 要調整</span>
+          <div class="compat-body">
+            <strong>Neo Geo / MVS</strong>
+            <span>68000 との命令互換は高いが、Neo Geo 特有の大容量スプライトバンク切り替えはカートリッジバンクレジスタで代替実装が必要。ADPCM 音源（YM2610）の ADPCM-A/B は PCM バッファに変換可。FM 4ch は FMU ch1–4 に直接対応。</span>
+          </div>
+        </li>
+      </ul>
+
+      <div class="info-box" style="margin-top:20px;">
+        <strong>SDK 提供ツール:</strong>　<code>xvm-asm</code>（アセンブラ）、<code>xvm-conv</code>（タイル/パレット変換）、<code>xvm-fmconv</code>（YM2612/YM2413 パラメーター変換）、<code>xvm-emu</code>（デスクトップエミュレーター）、<code>xvm-gdb</code>（GDB スタブ、JTAG 経由リモートデバッグ対応）
+      </div>
+    </div>
+
+    <!-- §10 付録 -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">§10</span>
+        <h2 class="section-title">付録</h2>
+      </div>
+
+      <div class="sub-section">
+        <div class="sub-title">A. VPU 主要レジスタ一覧</div>
+        <table class="spec-table">
+          <thead><tr><th>アドレス</th><th>レジスタ名</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td><code>52000h</code></td><td>VCTRL</td><td>VPU 制御（レイヤー有効化、モード選択）</td></tr>
+            <tr><td><code>52002h</code></td><td>BG0_SCROLL_X</td><td>BG Layer 0 水平スクロール（16-bit）</td></tr>
+            <tr><td><code>52004h</code></td><td>BG0_SCROLL_Y</td><td>BG Layer 0 垂直スクロール（16-bit）</td></tr>
+            <tr><td><code>52006h</code></td><td>BG1_SCROLL_X/Y</td><td>BG Layer 1 スクロール</td></tr>
+            <tr><td><code>5200Ah</code></td><td>HIRQ_LINE</td><td>Hライン割り込みのトリガーライン番号</td></tr>
+            <tr><td><code>5200Ch</code></td><td>DMA_SRC</td><td>DMA 転送元アドレス（20-bit）</td></tr>
+            <tr><td><code>52010h</code></td><td>DMA_DST</td><td>DMA 転送先 VRAM アドレス</td></tr>
+            <tr><td><code>52012h</code></td><td>DMA_LEN</td><td>DMA 転送バイト数</td></tr>
+            <tr><td><code>52014h</code></td><td>DMA_CTRL</td><td>DMA 開始・方向・モード（bit0 書き込みで起動）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="sub-section">
+        <div class="sub-title">B. 改訂履歴</div>
+        <table class="spec-table">
+          <thead><tr><th>Rev.</th><th>日付</th><th>変更内容</th></tr></thead>
+          <tbody>
+            <tr><td>1.0.0</td><td>2026-02-28</td><td>初版発行</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="info-box accent" style="margin-top: 20px;">
+        本仕様書に記載の内容は予告なく変更される場合があります。最新版は公式開発者ポータルを参照してください。本書の無断複製・転載を禁じます。
+      </div>
+    </div>
+
+  </div><!-- /doc-body -->
+
+  <div class="doc-footer">
+    <span>XVM-86 Hardware Architecture Reference — Rev. 1.0.0</span>
+    <span>© 2026 XVM Systems. CONFIDENTIAL</span>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+  // Generate palette swatches (simplified 512-color NES-style palette)
+  const grid = document.getElementById('paletteGrid');
+  const colors = [
+    '#000000','#111111','#222222','#333333','#444444','#555555','#666666','#777777',
+    '#888888','#999999','#aaaaaa','#bbbbbb','#cccccc','#dddddd','#eeeeee','#ffffff',
+    '#7f0000','#9f1a00','#bf4000','#df6000','#ff8000','#ffaa00','#ffd000','#ffff00',
+    '#007f00','#1a9f00','#40bf00','#60df00','#80ff00','#00ff80','#00ffaa','#00ffff',
+    '#00007f','#001a9f','#0040bf','#0060df','#0080ff','#0080aa','#004080','#002060',
+    '#7f007f','#9f009f','#bf00bf','#df00df','#ff00ff','#ff00aa','#ff0060','#ff0020',
+    '#7f3f00','#9f5000','#bf7000','#df9000','#ffb000','#ffc860','#ffe0a0','#fff0d0',
+    '#003f7f','#005090','#0070af','#0090cf','#00b0ef','#40c8ff','#80e0ff','#c0f0ff',
+  ];
+  colors.forEach(c => {
+    const d = document.createElement('div');
+    d.className = 'palette-swatch';
+    d.style.background = c;
+    d.title = c;
+    grid.appendChild(d);
+  });
+</script>
+</body>
+</html>
